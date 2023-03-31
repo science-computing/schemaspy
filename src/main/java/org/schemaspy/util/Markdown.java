@@ -41,6 +41,22 @@ import java.util.regex.Pattern;
  * @author Daniel Watt
  */
 public class Markdown {
+    private static class FlexmarkOptionsHolder {
+        static final DataHolder options = computeOptionsValue();
+
+        private static DataHolder computeOptionsValue() {
+            String dataHolderClassName = System.getProperty("schemaspy.flexmark.options.class");
+            if (null == dataHolderClassName) {
+                return PegdownOptionsAdapter.flexmarkOptions(true,
+                           Extensions.ALL ^ Extensions.HARDWRAPS);
+            }
+            try {
+                return (DataHolder) Class.forName(dataHolderClassName).getDeclaredMethod("getOptions").invoke(null);
+            } catch (ReflectiveOperationException | SecurityException  exc) {
+                throw new RuntimeException(exc);
+            }
+        }
+    }
 
     private static final HashMap<String, String> pages = new HashMap<>();
 
@@ -53,9 +69,7 @@ public class Markdown {
         this(
                 markdownText,
                 rootPath,
-                PegdownOptionsAdapter.flexmarkOptions(true,
-                        Extensions.ALL ^ Extensions.HARDWRAPS
-                )
+                FlexmarkOptionsHolder.options
         );
     }
 
